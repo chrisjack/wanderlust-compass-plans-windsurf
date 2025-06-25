@@ -15,6 +15,8 @@ import Profile from './pages/Profile';
 import Alerts from './pages/Alerts';
 import Messages from './pages/Messages';
 import PlannerTripDetails from './pages/PlannerTripDetails';
+import ResetPassword from './pages/ResetPassword';
+import AuthCallback from './pages/AuthCallback';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +46,8 @@ function App() {
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/planner_trips/:id" element={<PlannerTripDetails />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/auth-callback" element={<AuthCallback />} />
         </Routes>
         <Toaster />
       </BrowserRouter>

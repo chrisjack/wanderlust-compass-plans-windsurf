@@ -76,8 +76,8 @@ export function TaskCard({ task, onDelete }: TaskCardProps) {
                 backgroundColor: '#F3E8FF',
                 color: '#5B2B8C',
                 fontWeight: 600,
-                fontSize: '0.75rem',
-                padding: '0.15rem 0.6rem',
+                fontSize: '0.65rem',
+                padding: '0.08rem 0.4rem',
                 borderRadius: '9999px',
                 display: 'inline-block',
                 marginBottom: '0.5rem',
@@ -87,7 +87,7 @@ export function TaskCard({ task, onDelete }: TaskCardProps) {
               }</span>
             )}
             {/* Trip title */}
-            <h3 className="font-semibold text-base mb-1">{task.title}</h3>
+            <h3 className="font-semibold text-sm mb-1">{task.title}</h3>
             {/* Description (optional, keep if you want) */}
             {task.description && (
               <p className="text-sm text-gray-600 mb-2 line-clamp-2">
