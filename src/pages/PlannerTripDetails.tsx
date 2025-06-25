@@ -585,7 +585,6 @@ export default function PlannerTripDetails() {
                               title: data.title,
                               description: data.description,
                               column_id: data.column_id,
-                              departureDate: data.departureDate,
                             };
                             
                             // Only include trip_id if it's not empty

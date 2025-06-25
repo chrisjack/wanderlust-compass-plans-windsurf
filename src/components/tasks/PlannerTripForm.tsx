@@ -294,7 +294,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
             let tripId = initialData?.id;
             let trip;
             if (!tripId) {
-              // Create trip
+              // Create trip - only include fields that exist in the schema
               const { data: tripData, error } = await supabase
                 .from('planner_trips')
                 .insert({
@@ -302,8 +302,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
                   description: data.description,
                   column_id: data.column_id,
                   user_id: user.id,
-                  departureDate: data.departureDate,
-                  trip_id: data.trip_id,
+                  trip_id: data.trip_id || null,
                 })
                 .select()
                 .single();
@@ -311,15 +310,14 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
               tripId = tripData.id;
               trip = tripData;
             } else {
-              // Update trip
+              // Update trip - only include fields that exist in the schema
               const { error } = await supabase
                 .from('planner_trips')
                 .update({
                   title: data.title,
                   description: data.description,
                   column_id: data.column_id,
-                  departureDate: data.departureDate,
-                  trip_id: data.trip_id,
+                  trip_id: data.trip_id || null,
                 })
                 .eq('id', tripId);
               if (error) throw error;
