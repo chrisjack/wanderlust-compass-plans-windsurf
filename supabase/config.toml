@@ -1,0 +1,17 @@
+project_id = "diphacbvdhfzdqfkobkl"
+
+[functions]
+public_routes = {}
+
+[functions.flight-monitor]
+verify_jwt = true
+
+[functions.parse-travel-document]
+verify_jwt = true
+
+[functions.handle-travel-email]
+verify_jwt = false
+
+[functions.ai-document-parser]
+verify_jwt = true
+
