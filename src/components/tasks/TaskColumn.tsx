@@ -12,10 +12,9 @@ interface TaskColumnProps {
   column: PlannerColumn;
   onAddTask: () => void;
   search?: string;
-  onTaskCountChange?: (count: number) => void;
 }
 
-export function TaskColumn({ column, onAddTask, search, onTaskCountChange }: TaskColumnProps) {
+export function TaskColumn({ column, onAddTask, search }: TaskColumnProps) {
   const { user } = useAuth();
   const { setNodeRef } = useDroppable({ id: column.id });
 
@@ -93,13 +92,6 @@ export function TaskColumn({ column, onAddTask, search, onTaskCountChange }: Tas
     // TODO: Add client search if client data is available
     return inTitle || inTags;
   });
-
-  // Notify parent of task count change
-  React.useEffect(() => {
-    if (onTaskCountChange) {
-      onTaskCountChange(filteredTasks.length);
-    }
-  }, [filteredTasks.length, onTaskCountChange]);
 
   const handleDelete = async (taskId: string) => {
     const { error } = await supabase

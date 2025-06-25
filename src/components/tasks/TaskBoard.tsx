@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TaskColumn } from "./TaskColumn";
@@ -23,10 +23,9 @@ interface SortableColumnProps {
   children: React.ReactNode;
   onAddTask: () => void;
   search: string;
-  taskCount: number;
 }
 
-function SortableColumn({ column, children, onAddTask, search, taskCount }: SortableColumnProps) {
+function SortableColumn({ column, children, onAddTask, search }: SortableColumnProps) {
   const {
     attributes,
     listeners,
@@ -56,7 +55,6 @@ function SortableColumn({ column, children, onAddTask, search, taskCount }: Sort
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
         <h3 className="font-semibold text-lg">{column.title}</h3>
-        <span className="text-xs text-gray-500 bg-gray-200 rounded-full px-2 py-0.5 ml-auto">{taskCount}</span>
       </div>
       {children}
     </div>
@@ -73,7 +71,6 @@ export function TaskBoard() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [taskCounts, setTaskCounts] = useState<{ [columnId: string]: number }>({});
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -120,13 +117,6 @@ export function TaskBoard() {
       queryClient.invalidateQueries({ queryKey: ['planner-columns'] });
     },
   });
-
-  const handleTaskCountChange = useCallback((columnId: string, count: number) => {
-    setTaskCounts(prev => ({
-      ...prev,
-      [columnId]: count
-    }));
-  }, []);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -320,13 +310,11 @@ export function TaskBoard() {
                     column={column}
                     onAddTask={() => setIsTaskFormOpen(true)}
                     search={search}
-                    taskCount={taskCounts[column.id] || 0}
                   >
                     <TaskColumn 
                       column={column} 
                       onAddTask={() => setIsTaskFormOpen(true)}
                       search={search}
-                      onTaskCountChange={(count) => handleTaskCountChange(column.id, count)}
                     />
                   </SortableColumn>
                 ))}
