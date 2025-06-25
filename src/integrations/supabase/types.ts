@@ -696,6 +696,7 @@ export type Database = {
           created_at: string
           id: string
           source: string | null
+          user_id: string | null
         }
         Insert: {
           accommodation_address?: string | null
@@ -718,6 +719,7 @@ export type Database = {
           created_at?: string
           id?: string
           source?: string | null
+          user_id?: string | null
         }
         Update: {
           accommodation_address?: string | null
@@ -740,6 +742,7 @@ export type Database = {
           created_at?: string
           id?: string
           source?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -759,6 +762,7 @@ export type Database = {
           cruise_start_date: string | null
           id: string
           source: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -775,6 +779,7 @@ export type Database = {
           cruise_start_date?: string | null
           id?: string
           source?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -791,6 +796,7 @@ export type Database = {
           cruise_start_date?: string | null
           id?: string
           source?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -811,6 +817,7 @@ export type Database = {
           event_website: string | null
           id: string
           source: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -828,6 +835,7 @@ export type Database = {
           event_website?: string | null
           id?: string
           source?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -845,6 +853,49 @@ export type Database = {
           event_website?: string | null
           id?: string
           source?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      import_events: {
+        Row: {
+          address: string | null
+          confirmation_number: string | null
+          created_at: string
+          date: string | null
+          id: string
+          name: string | null
+          raw_text: string | null
+          source: string
+          time: string | null
+          user_id: string
+          venue: string | null
+        }
+        Insert: {
+          address?: string | null
+          confirmation_number?: string | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          name?: string | null
+          raw_text?: string | null
+          source: string
+          time?: string | null
+          user_id: string
+          venue?: string | null
+        }
+        Update: {
+          address?: string | null
+          confirmation_number?: string | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          name?: string | null
+          raw_text?: string | null
+          source?: string
+          time?: string | null
+          user_id?: string
+          venue?: string | null
         }
         Relationships: []
       }
@@ -870,6 +921,7 @@ export type Database = {
           flight_time: string | null
           id: string
           source: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -892,6 +944,7 @@ export type Database = {
           flight_time?: string | null
           id?: string
           source?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -914,6 +967,7 @@ export type Database = {
           flight_time?: string | null
           id?: string
           source?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -934,6 +988,7 @@ export type Database = {
           transport_pickup_location: string | null
           transport_pickup_time: string | null
           transport_website: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -951,6 +1006,7 @@ export type Database = {
           transport_pickup_location?: string | null
           transport_pickup_time?: string | null
           transport_website?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -968,6 +1024,7 @@ export type Database = {
           transport_pickup_location?: string | null
           transport_pickup_time?: string | null
           transport_website?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1067,6 +1124,453 @@ export type Database = {
         }
         Relationships: []
       }
+      planner_columns: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      planner_fields: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      planner_files: {
+        Row: {
+          created_at: string
+          file: string | null
+          id: string
+          name: string | null
+          trip_id: string | null
+          user: string | null
+        }
+        Insert: {
+          created_at?: string
+          file?: string | null
+          id?: string
+          name?: string | null
+          trip_id?: string | null
+          user?: string | null
+        }
+        Update: {
+          created_at?: string
+          file?: string | null
+          id?: string
+          name?: string | null
+          trip_id?: string | null
+          user?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planner_files_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "planner_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planner_notes: {
+        Row: {
+          content: string
+          created_at: string | null
+          file: string | null
+          id: string
+          link: string | null
+          title: string | null
+          trip_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          file?: string | null
+          id?: string
+          link?: string | null
+          title?: string | null
+          trip_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          file?: string | null
+          id?: string
+          link?: string | null
+          title?: string | null
+          trip_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planner_notes_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "planner_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planner_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      planner_tasks: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          status: string | null
+          title: string
+          trip_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string | null
+          title: string
+          trip_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string | null
+          title?: string
+          trip_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planner_tasks_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "planner_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planner_trip_field_values: {
+        Row: {
+          created_at: string
+          field_id: string | null
+          id: string
+          trip_id: string | null
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          field_id?: string | null
+          id?: string
+          trip_id?: string | null
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          field_id?: string | null
+          id?: string
+          trip_id?: string | null
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planner_trip_field_values_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "planner_fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planner_trip_field_values_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "planner_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planner_trip_history: {
+        Row: {
+          column_id: string | null
+          id: string
+          moved_at: string | null
+          previous_column_id: string | null
+          trip_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          column_id?: string | null
+          id?: string
+          moved_at?: string | null
+          previous_column_id?: string | null
+          trip_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          column_id?: string | null
+          id?: string
+          moved_at?: string | null
+          previous_column_id?: string | null
+          trip_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planner_trip_history_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "planner_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planner_trip_history_previous_column_id_fkey"
+            columns: ["previous_column_id"]
+            isOneToOne: false
+            referencedRelation: "planner_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planner_trip_history_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "planner_trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planner_trip_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planner_trip_links: {
+        Row: {
+          created_at: string | null
+          id: string
+          title: string
+          trip_id: string | null
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          title: string
+          trip_id?: string | null
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          title?: string
+          trip_id?: string | null
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planner_trip_links_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "planner_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planner_trip_tags: {
+        Row: {
+          created_at: string | null
+          tag_id: string
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          tag_id: string
+          trip_id: string
+        }
+        Update: {
+          created_at?: string | null
+          tag_id?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planner_trip_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "planner_tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planner_trip_tags_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "planner_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planner_trip_texts: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          trip_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          trip_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          trip_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planner_trip_texts_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "planner_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planner_trips: {
+        Row: {
+          client_id: string | null
+          column_id: string
+          created_at: string
+          departureDate: string | null
+          description: string | null
+          id: string
+          title: string
+          trip_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          column_id: string
+          created_at?: string
+          departureDate?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          trip_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          column_id?: string
+          created_at?: string
+          departureDate?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          trip_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "planner_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           admin: boolean | null
@@ -1117,112 +1621,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      planner_columns: {
-        Row: PlannerColumn;
-        Insert: Omit<PlannerColumn, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<PlannerColumn, 'id' | 'created_at' | 'updated_at'>>;
-      }
-      planner_trips: {
-        Row: PlannerTrip;
-        Insert: Omit<PlannerTrip, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<PlannerTrip, 'id' | 'created_at' | 'updated_at'>>;
-      }
-      planner_tags: {
-        Row: PlannerTag;
-        Insert: Omit<PlannerTag, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<PlannerTag, 'id' | 'created_at' | 'updated_at'>>;
-      }
-      planner_trip_links: {
-        Row: PlannerTripLink;
-        Insert: Omit<PlannerTripLink, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<PlannerTripLink, 'id' | 'created_at' | 'updated_at'>>;
-      }
-      planner_trip_texts: {
-        Row: PlannerTripText;
-        Insert: Omit<PlannerTripText, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<PlannerTripText, 'id' | 'created_at' | 'updated_at'>>;
-      }
-      task_columns: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          position: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          position?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          position?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      tasks: {
-        Row: {
-          column_id: string
-          created_at: string
-          deadline_date: string | null
-          description: string | null
-          id: string
-          priority: string
-          title: string
-          trip_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          column_id: string
-          created_at?: string
-          deadline_date?: string | null
-          description?: string | null
-          id?: string
-          priority?: string
-          title: string
-          trip_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          column_id?: string
-          created_at?: string
-          deadline_date?: string | null
-          description?: string | null
-          id?: string
-          priority?: string
-          title?: string
-          trip_id?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tasks_column_id_fkey"
-            columns: ["column_id"]
-            isOneToOne: false
-            referencedRelation: "task_columns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tasks_trip_id_fkey"
-            columns: ["trip_id"]
-            isOneToOne: false
-            referencedRelation: "trips"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       transports: {
         Row: {
@@ -1340,6 +1738,33 @@ export type Database = {
           trip_status?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_primary: boolean | null
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_primary?: boolean | null
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_primary?: boolean | null
+          user_id?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -1500,31 +1925,6 @@ export interface PlannerColumn {
   title: string;
   position: number;
   user_id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PlannerTag {
-  id: string;
-  name: string;
-  color: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PlannerTripLink {
-  id: string;
-  trip_id: string;
-  title: string;
-  url: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PlannerTripText {
-  id: string;
-  trip_id: string;
-  content: string;
   created_at: string;
   updated_at: string;
 }

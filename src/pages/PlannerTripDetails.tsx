@@ -471,7 +471,7 @@ export default function PlannerTripDetails() {
                   </Button>
                   <div className="space-y-2">
                     <div className="flex items-center gap-3 pr-16">
-                      <h2 className="text-2xl font-bold">{trip.title}</h2>
+                      <h2 className="text-xl font-bold">{trip.title}</h2>
                     </div>
                   </div>
                   <p className="text-gray-700 mb-4">{trip.description}</p>
@@ -479,16 +479,16 @@ export default function PlannerTripDetails() {
                     {trip.trips?.id ? (
                       <Link
                         to={`/trips/${trip.trips.id}`}
-                        className="font-semibold text-base text-[#7C3AED] hover:underline transition-colors"
+                        className="font-semibold text-sm text-[#7C3AED] hover:underline transition-colors"
                       >
                         {trip.trips.trip_name || trip.title}
                       </Link>
                     ) : (
-                      <span className="font-semibold text-base">{trip.trips?.trip_name || trip.title}</span>
+                      <span className="font-semibold text-sm">{trip.trips?.trip_name || trip.title}</span>
                     )}
                     {trip.departureDate && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
                         <span>{
                           new Date(trip.departureDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
                         }</span>
@@ -542,7 +542,7 @@ export default function PlannerTripDetails() {
                               <span className="font-semibold text-xs">{field.title}:</span>
                               <span className="text-xs">
                                 {field.type === 'checkbox'
-                                  ? (value === 'true' || value === true ? 'Yes' : 'No')
+                                  ? (value === 'true' ? 'Yes' : 'No')
                                   : field.type === 'date' && value
                                     ? new Date(value).toLocaleDateString()
                                     : value || <span className="text-gray-400">-</span>}
@@ -646,6 +646,8 @@ export default function PlannerTripDetails() {
                               });
                             }
                             setLoading(false);
+                            // Invalidate custom field values query to refresh the UI
+                            queryClient.invalidateQueries({ queryKey: ["planner-trip-custom-fields", trip.id] });
                             toast({
                               title: "Success",
                               description: "Trip updated successfully",

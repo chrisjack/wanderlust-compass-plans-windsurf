@@ -75,6 +75,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
       departureDate: initialData?.departureDate || null,
       tags: initialData?.tags || [],
     },
+    mode: "onChange",
   });
 
   // Fetch columns
@@ -295,6 +296,14 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
             let trip;
             if (!tripId) {
               // Create trip - include departureDate field
+              console.log('Creating trip with data:', {
+                title: data.title,
+                description: data.description,
+                column_id: data.column_id,
+                user_id: user.id,
+                trip_id: data.trip_id || null,
+                departureDate: data.departureDate || null,
+              });
               const { data: tripData, error } = await supabase
                 .from('planner_trips')
                 .insert({
@@ -307,7 +316,10 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
                 })
                 .select()
                 .single();
-              if (error) throw error;
+              if (error) {
+                console.error('Error creating trip:', error);
+                throw error;
+              }
               tripId = tripData.id;
               trip = tripData;
             } else {
@@ -372,7 +384,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
             }
             queryClient.invalidateQueries({ queryKey: ['planner-trips'] });
             setIsSubmitting(false);
-            onSubmit(data);
+            onSubmit({ ...data, id: tripId, trip });
           } catch (error) {
             setIsSubmitting(false);
             toast({
@@ -387,6 +399,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
         <FormField
           control={form.control}
           name="title"
+          rules={{ required: "Title is required" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Title</FormLabel>
@@ -427,6 +440,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
         <FormField
           control={form.control}
           name="column_id"
+          rules={{ required: "Please select a status" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>

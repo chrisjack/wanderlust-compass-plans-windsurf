@@ -170,7 +170,7 @@ export function TaskBoard() {
       const { data: tripData, error: fetchError } = await supabase
         .from('planner_trips')
         .select('column_id')
-        .eq('id', active.id)
+        .eq('id', active.id as string)
         .single();
 
       if (fetchError) {
@@ -184,7 +184,7 @@ export function TaskBoard() {
       }
 
       const previousColumnId = tripData?.column_id;
-      const newColumnId = over.id;
+      const newColumnId = over.id as string;
 
       // Only update if the column actually changed
       if (previousColumnId === newColumnId) return;
@@ -192,7 +192,7 @@ export function TaskBoard() {
       const { error } = await supabase
         .from('planner_trips')
         .update({ column_id: newColumnId })
-        .eq('id', active.id);
+        .eq('id', active.id as string);
 
       if (error) {
         console.error('Error updating trip column:', error);
@@ -207,14 +207,12 @@ export function TaskBoard() {
       // Insert into planner_trip_history
       const { error: historyError } = await supabase
         .from('planner_trip_history')
-        .insert([
-          {
-            trip_id: active.id,
-            column_id: newColumnId,
-            previous_column_id: previousColumnId,
-            user_id: user?.id,
-          }
-        ]);
+        .insert({
+          trip_id: active.id as string,
+          column_id: newColumnId,
+          previous_column_id: previousColumnId,
+          user_id: user?.id,
+        });
       if (historyError) {
         console.error('Error inserting trip history:', historyError);
       }
@@ -343,40 +341,54 @@ export function TaskBoard() {
             onCancel={() => setIsTaskFormOpen(false)}
             onDelete={() => setIsTaskFormOpen(false)}
             onSubmit={async (data) => {
-              // Create the trip - include departureDate field
-              const { data: trip, error } = await supabase
-                .from('planner_trips')
-                .insert({
-                  title: data.title,
-                  description: data.description,
-                  column_id: data.column_id,
-                  user_id: user.id,
-                  trip_id: data.trip_id || null,
-                  departureDate: data.departureDate || null,
-                })
-                .select()
-                .single();
-              if (error) return;
-              // Add links
-              if (data.links?.length) {
-                await supabase.from('planner_trip_links').insert(
-                  data.links.filter((l: any) => l.title && l.url).map((l: any) => ({ trip_id: trip.id, title: l.title, url: l.url }))
-                );
+              try {
+                console.log('TaskBoard onSubmit data:', data);
+                // The PlannerTripForm already creates the trip, so we just need to handle additional operations
+                // Get the trip ID from the form submission
+                const tripId = data.id; // This should be returned from the form
+                
+                if (!tripId) {
+                  console.error('No trip ID received from form');
+                  toast({
+                    title: "Error",
+                    description: "Failed to create trip - no trip ID received",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                // Add links
+                if (data.links?.length) {
+                  await supabase.from('planner_trip_links').insert(
+                    data.links.filter((l: any) => l.title && l.url).map((l: any) => ({ trip_id: tripId, title: l.title, url: l.url }))
+                  );
+                }
+                // Add notes
+                if (data.notes?.length) {
+                  await supabase.from('planner_trip_texts').insert(
+                    data.notes.filter((n: any) => n.content).map((n: any) => ({ trip_id: tripId, content: n.content }))
+                  );
+                }
+                // Add tags
+                if (data.tags?.length) {
+                  await supabase.from('planner_trip_tags').insert(
+                    data.tags.map((tag: any) => ({ trip_id: tripId, tag_id: tag.id }))
+                  );
+                }
+                queryClient.invalidateQueries({ queryKey: ['planner-trips'] });
+                setIsTaskFormOpen(false);
+                toast({
+                  title: "Success",
+                  description: "Trip created successfully",
+                });
+              } catch (error) {
+                console.error('Error in TaskBoard onSubmit:', error);
+                toast({
+                  title: "Error",
+                  description: "Failed to create trip",
+                  variant: "destructive",
+                });
               }
-              // Add notes
-              if (data.notes?.length) {
-                await supabase.from('planner_trip_texts').insert(
-                  data.notes.filter((n: any) => n.content).map((n: any) => ({ trip_id: trip.id, content: n.content }))
-                );
-              }
-              // Add tags
-              if (data.tags?.length) {
-                await supabase.from('planner_trip_tags').insert(
-                  data.tags.map((tag: any) => ({ trip_id: trip.id, tag_id: tag.id }))
-                );
-              }
-              queryClient.invalidateQueries({ queryKey: ['planner-trips'] });
-              setIsTaskFormOpen(false);
             }}
           />
         </SheetContent>

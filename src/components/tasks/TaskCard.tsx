@@ -3,7 +3,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Link as LinkIcon, FileText } from "lucide-react";
+import { Link as LinkIcon, FileText, Calendar } from "lucide-react";
 import { TaskDetails } from "./TaskDetails";
 import { PlannerTrip } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
@@ -76,8 +76,8 @@ export function TaskCard({ task, onDelete }: TaskCardProps) {
                 backgroundColor: '#F3E8FF',
                 color: '#5B2B8C',
                 fontWeight: 600,
-                fontSize: '0.85rem',
-                padding: '0.2rem 0.75rem',
+                fontSize: '0.75rem',
+                padding: '0.15rem 0.6rem',
                 borderRadius: '9999px',
                 display: 'inline-block',
                 marginBottom: '0.5rem',
@@ -87,7 +87,7 @@ export function TaskCard({ task, onDelete }: TaskCardProps) {
               }</span>
             )}
             {/* Trip title */}
-            <h3 className="font-semibold text-lg mb-1">{task.title}</h3>
+            <h3 className="font-semibold text-base mb-1">{task.title}</h3>
             {/* Description (optional, keep if you want) */}
             {task.description && (
               <p className="text-sm text-gray-600 mb-2 line-clamp-2">
