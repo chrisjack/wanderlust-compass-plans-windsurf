@@ -96,7 +96,9 @@ export function TaskColumn({ column, onAddTask, search, onTaskCountChange }: Tas
 
   // Notify parent of task count change
   React.useEffect(() => {
-    onTaskCountChange?.(filteredTasks.length);
+    if (onTaskCountChange) {
+      onTaskCountChange(filteredTasks.length);
+    }
   }, [filteredTasks.length, onTaskCountChange]);
 
   const handleDelete = async (taskId: string) => {

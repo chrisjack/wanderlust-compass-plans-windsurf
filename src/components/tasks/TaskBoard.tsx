@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TaskColumn } from "./TaskColumn";
@@ -121,12 +121,12 @@ export function TaskBoard() {
     },
   });
 
-  const handleTaskCountChange = (columnId: string, count: number) => {
+  const handleTaskCountChange = useCallback((columnId: string, count: number) => {
     setTaskCounts(prev => ({
       ...prev,
       [columnId]: count
     }));
-  };
+  }, []);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
