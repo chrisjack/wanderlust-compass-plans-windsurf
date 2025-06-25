@@ -343,7 +343,7 @@ export function TaskBoard() {
             onCancel={() => setIsTaskFormOpen(false)}
             onDelete={() => setIsTaskFormOpen(false)}
             onSubmit={async (data) => {
-              // Create the trip
+              // Create the trip - only include fields that exist in the schema
               const { data: trip, error } = await supabase
                 .from('planner_trips')
                 .insert({
@@ -351,7 +351,7 @@ export function TaskBoard() {
                   description: data.description,
                   column_id: data.column_id,
                   user_id: user.id,
-                  departureDate: data.departureDate,
+                  trip_id: data.trip_id || null,
                 })
                 .select()
                 .single();
