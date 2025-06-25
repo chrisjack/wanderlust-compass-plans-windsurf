@@ -10,7 +10,7 @@ import { DashboardNav } from "@/components/DashboardNav";
 import { TopNav } from "@/components/TopNav";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, Trash2, Check, X, FileText } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Check, X, FileText, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -487,15 +487,12 @@ export default function PlannerTripDetails() {
                       <span className="font-semibold text-base">{trip.trips?.trip_name || trip.title}</span>
                     )}
                     {trip.departureDate && (
-                      <span style={{
-                        backgroundColor: '#F3E8FF',
-                        color: '#5B2B8C',
-                        fontWeight: 600,
-                        fontSize: '0.85rem',
-                        padding: '0.2rem 0.75rem',
-                        borderRadius: '9999px',
-                        letterSpacing: 0.2,
-                      }}>{new Date(trip.departureDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="h-4 w-4" />
+                        <span>{
+                          new Date(trip.departureDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+                        }</span>
+                      </div>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -580,11 +577,12 @@ export default function PlannerTripDetails() {
                         onCancel={() => setIsEditOpen(false)}
                         onSubmit={async (data) => {
                           try {
-                            // Update the trip - only include fields that exist in the schema
+                            // Update the trip - include departureDate field
                             const updateData: any = {
                               title: data.title,
                               description: data.description,
                               column_id: data.column_id,
+                              departureDate: data.departureDate || null,
                             };
                             
                             // Only include trip_id if it's not empty

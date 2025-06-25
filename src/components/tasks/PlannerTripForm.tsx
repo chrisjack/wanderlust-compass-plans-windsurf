@@ -294,7 +294,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
             let tripId = initialData?.id;
             let trip;
             if (!tripId) {
-              // Create trip - only include fields that exist in the schema
+              // Create trip - include departureDate field
               const { data: tripData, error } = await supabase
                 .from('planner_trips')
                 .insert({
@@ -303,6 +303,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
                   column_id: data.column_id,
                   user_id: user.id,
                   trip_id: data.trip_id || null,
+                  departureDate: data.departureDate || null,
                 })
                 .select()
                 .single();
@@ -310,7 +311,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
               tripId = tripData.id;
               trip = tripData;
             } else {
-              // Update trip - only include fields that exist in the schema
+              // Update trip - include departureDate field
               const { error } = await supabase
                 .from('planner_trips')
                 .update({
@@ -318,6 +319,7 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
                   description: data.description,
                   column_id: data.column_id,
                   trip_id: data.trip_id || null,
+                  departureDate: data.departureDate || null,
                 })
                 .eq('id', tripId);
               if (error) throw error;
@@ -397,12 +399,12 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
         />
         <FormField
           control={form.control}
-          name="departureDate"
+          name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Departure Date</FormLabel>
+              <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input type="date" {...field} value={field.value || ''} />
+                <Textarea {...field} className="min-h-[100px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -410,12 +412,12 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
         />
         <FormField
           control={form.control}
-          name="description"
+          name="departureDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Departure Date</FormLabel>
               <FormControl>
-                <Textarea {...field} className="min-h-[100px]" />
+                <Input type="date" {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
