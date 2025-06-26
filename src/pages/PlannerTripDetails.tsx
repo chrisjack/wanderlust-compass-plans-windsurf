@@ -505,22 +505,14 @@ export default function PlannerTripDetails() {
                     Edit
                   </Button>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-3 pr-16">
+                    <div className="flex items-center gap-3 pr-16 mb-2">
                       <h2 className="text-xl font-bold">{trip.title}</h2>
                     </div>
                   </div>
-                  <p className="text-gray-700 mb-4">{trip.description}</p>
+                  {trip.description && (
+                    <p className="text-gray-700 mb-4">{trip.description}</p>
+                  )}
                   <div className="flex items-center gap-3 mb-4">
-                    {trip.trips?.id ? (
-                      <Link
-                        to={`/trips/${trip.trips.id}`}
-                        className="font-semibold text-sm text-[#7C3AED] hover:underline transition-colors"
-                      >
-                        {trip.trips.trip_name || trip.title}
-                      </Link>
-                    ) : (
-                      <span className="font-semibold text-sm">{trip.trips?.trip_name || trip.title}</span>
-                    )}
                     {trip.departureDate && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
@@ -579,7 +571,7 @@ export default function PlannerTripDetails() {
                                 : field.type === 'date' && value
                                   ? new Date(value).toLocaleDateString()
                                   : field.type === 'url' && value
-                                    ? <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{value}</a>
+                                    ? <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate max-w-full block" style={{ display: 'block', maxWidth: '100%' }}>{value}</a>
                                     : value || <span className="text-gray-400">Not set</span>}
                             </div>
                           </div>
