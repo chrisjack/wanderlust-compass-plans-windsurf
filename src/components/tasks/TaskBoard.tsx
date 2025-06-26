@@ -17,6 +17,7 @@ import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortabl
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { PlannerFieldsDrawer } from "./PlannerFieldsDrawer";
+import { useArchiveSetup } from "@/hooks/useArchiveSetup";
 
 interface SortableColumnProps {
   column: any;
@@ -25,7 +26,7 @@ interface SortableColumnProps {
   search: string;
 }
 
-function SortableColumn({ column, children, onAddTask, search }: SortableColumnProps) {
+function SortableColumn({ column, children, onAddTask, search, count }: SortableColumnProps & { count: number }) {
   const {
     attributes,
     listeners,
@@ -54,7 +55,12 @@ function SortableColumn({ column, children, onAddTask, search }: SortableColumnP
         >
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
-        <h3 className="font-semibold text-lg">{column.title}</h3>
+        <h3 className="font-semibold text-lg flex items-center gap-2">
+          {column.title}
+          <span className="ml-1 rounded-full bg-gray-200 text-xs px-2 py-0.5 font-semibold">
+            {count}
+          </span>
+        </h3>
       </div>
       {children}
     </div>
@@ -72,6 +78,12 @@ export function TaskBoard() {
   const [search, setSearch] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
   
+  // Ensure Archive column exists
+  useArchiveSetup();
+
+  // Track counts for each column
+  const [columnCounts, setColumnCounts] = useState<{ [columnId: string]: number }>({});
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -94,6 +106,30 @@ export function TaskBoard() {
       if (error) {
         console.error('Error fetching columns:', error);
         throw error;
+      }
+
+      // Check if Archive column exists
+      const hasArchiveColumn = data.some(col => col.title === 'Archive');
+      
+      if (!hasArchiveColumn) {
+        // Create Archive column if it doesn't exist
+        const { data: archiveColumn, error: archiveError } = await supabase
+          .from('planner_columns')
+          .insert([{
+            title: 'Archive',
+            position: data.length + 1,
+            user_id: user.id,
+            is_archive: true // Add a flag to identify archive column
+          }])
+          .select()
+          .single();
+        
+        if (archiveError) {
+          console.error('Error creating Archive column:', archiveError);
+        } else {
+          // Add the new archive column to the data
+          data.push(archiveColumn);
+        }
       }
 
       console.log('Fetched columns:', data);
@@ -308,11 +344,13 @@ export function TaskBoard() {
                     column={column}
                     onAddTask={() => setIsTaskFormOpen(true)}
                     search={search}
+                    count={columnCounts[column.id] || 0}
                   >
                     <TaskColumn 
                       column={column} 
                       onAddTask={() => setIsTaskFormOpen(true)}
                       search={search}
+                      onCount={count => setColumnCounts(prev => ({ ...prev, [column.id]: count }))}
                     />
                   </SortableColumn>
                 ))}

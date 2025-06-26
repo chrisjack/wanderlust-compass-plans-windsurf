@@ -3,20 +3,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { TaskCard } from "./TaskCard";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { PlannerColumn, PlannerTrip } from "@/integrations/supabase/types";
 import { useDroppable } from '@dnd-kit/core';
-import React from "react";
+import React, { useState } from "react";
 
 interface TaskColumnProps {
   column: PlannerColumn;
   onAddTask: () => void;
   search?: string;
+  onCount?: (count: number) => void;
 }
 
-export function TaskColumn({ column, onAddTask, search }: TaskColumnProps) {
+export function TaskColumn({ column, onAddTask, search, onCount }: TaskColumnProps) {
   const { user } = useAuth();
   const { setNodeRef } = useDroppable({ id: column.id });
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Check if this is the Archive column
+  const isArchiveColumn = column.title === 'Archive';
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['planner-trips', column.id],
@@ -93,6 +98,11 @@ export function TaskColumn({ column, onAddTask, search }: TaskColumnProps) {
     return inTitle || inTags;
   });
 
+  // Notify parent of count
+  React.useEffect(() => {
+    if (onCount) onCount(filteredTasks.length);
+  }, [filteredTasks.length, onCount]);
+
   const handleDelete = async (taskId: string) => {
     const { error } = await supabase
       .from('planner_trips')
@@ -107,19 +117,46 @@ export function TaskColumn({ column, onAddTask, search }: TaskColumnProps) {
 
   return (
     <div ref={setNodeRef} className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-h-[200px] flex flex-col">
+      {isArchiveColumn && (
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm text-gray-600">{filteredTasks.length} archived trips</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="h-6 w-6 p-0"
+          >
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      )}
+      
       <div className="space-y-2 flex-1">
-        {filteredTasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onDelete={() => handleDelete(task.id)}
-          />
-        ))}
+        {isArchiveColumn && !isExpanded ? (
+          <div className="text-center text-gray-500 text-sm py-8">
+            Click to view archived trips
+          </div>
+        ) : (
+          filteredTasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onDelete={() => handleDelete(task.id)}
+            />
+          ))
+        )}
       </div>
-      <Button className="mt-4 w-full" variant="secondary" onClick={onAddTask}>
-        <Plus className="h-4 w-4 mr-2" />
-        Add Trip
-      </Button>
+      
+      {!isArchiveColumn && (
+        <Button className="mt-4 w-full" variant="secondary" onClick={onAddTask}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Trip
+        </Button>
+      )}
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import { DashboardNav } from "@/components/DashboardNav";
 import { TopNav } from "@/components/TopNav";
 import { TaskBoard } from "@/components/tasks/TaskBoard";
-import { useAuth } from "@/lib/auth";
 import { Navigate } from "react-router-dom";
+import { useArchiveSetup } from "@/hooks/useArchiveSetup";
 
 export default function Planner() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useArchiveSetup();
 
   if (loading) {
     return (

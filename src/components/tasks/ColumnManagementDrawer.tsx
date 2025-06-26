@@ -28,6 +28,9 @@ function SortableColumnItem({ column, onDelete, onUpdateTitle }: SortableColumnI
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(column.title);
   
+  // Check if this is the Archive column
+  const isArchiveColumn = column.title === 'Archive';
+  
   const {
     attributes,
     listeners,
@@ -103,27 +106,34 @@ function SortableColumnItem({ column, onDelete, onUpdateTitle }: SortableColumnI
           </div>
         ) : (
           <div className="flex items-center gap-2 flex-1">
-            <span className="text-sm font-medium flex-1">{column.title}</span>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsEditing(true)}
-              className="h-8 w-8 p-0"
-            >
-              <Edit className="h-4 w-4 text-muted-foreground" />
-            </Button>
+            <span className={`text-sm font-medium flex-1 ${isArchiveColumn ? 'text-gray-500' : ''}`}>
+              {column.title}
+              {isArchiveColumn && <span className="text-xs text-gray-400 ml-2">(System)</span>}
+            </span>
+            {!isArchiveColumn && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsEditing(true)}
+                className="h-8 w-8 p-0"
+              >
+                <Edit className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            )}
           </div>
         )}
       </div>
       
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => onDelete(column.id)}
-        className="h-8 w-8"
-      >
-        <Trash2 className="h-4 w-4 text-destructive" />
-      </Button>
+      {!isArchiveColumn && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(column.id)}
+          className="h-8 w-8"
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      )}
     </div>
   );
 }

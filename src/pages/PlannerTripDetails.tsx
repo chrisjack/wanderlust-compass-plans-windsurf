@@ -565,27 +565,26 @@ export default function PlannerTripDetails() {
                         )) || <li>-</li>}
                       </ul>
                     </div>
-                    {/* Custom Fields under Links */}
+                    {/* Custom Fields - each field as its own section */}
                     {(customFieldsLoading || allCustomFieldsLoading) ? (
                       <div className="text-xs text-gray-400 mt-2">Loading fields...</div>
                     ) : allCustomFieldsWithValues.length > 0 && (
-                      <div className="mt-4">
-                        <span className="font-medium">Other Fields:</span>
-                        <ul className="ml-6 mt-1 space-y-1">
-                          {allCustomFieldsWithValues.map(({ field, value, id }) => (
-                            <li key={id} className="flex gap-2 items-center">
-                              <span className="font-semibold text-xs">{field.title}:</span>
-                              <span className="text-xs">
-                                {field.type === 'checkbox'
-                                  ? (value === 'true' ? 'Yes' : (value === 'false' ? 'No' : <span className="text-gray-400">Not set</span>))
-                                  : field.type === 'date' && value
-                                    ? new Date(value).toLocaleDateString()
+                      <>
+                        {allCustomFieldsWithValues.map(({ field, value, id }) => (
+                          <div key={id}>
+                            <span className="font-medium">{field.title}:</span>
+                            <div className="mt-1">
+                              {field.type === 'checkbox'
+                                ? (value === 'true' ? 'Yes' : (value === 'false' ? 'No' : <span className="text-gray-400">Not set</span>))
+                                : field.type === 'date' && value
+                                  ? new Date(value).toLocaleDateString()
+                                  : field.type === 'url' && value
+                                    ? <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{value}</a>
                                     : value || <span className="text-gray-400">Not set</span>}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
                     )}
                   </div>
                 </div>

@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlannerTrip, PlannerTag, PlannerTripLink, PlannerTripText } from "@/integrations/supabase/types";
-import { Link as LinkIcon, FileText, Tag, Plus, Trash2 } from "lucide-react";
+import { PlannerTrip } from "@/integrations/supabase/types";
+import { Link as LinkIcon, FileText, Tag, Plus, Trash2, Archive } from "lucide-react";
 
 interface TaskDetailsProps {
   task: PlannerTrip;
@@ -166,6 +166,62 @@ export function TaskDetails({ task, open, onClose, onDelete }: TaskDetailsProps)
     });
   };
 
+  const handleArchive = async () => {
+    // First, get the Archive column ID
+    const { data: archiveColumn, error: archiveError } = await supabase
+      .from('planner_columns')
+      .select('id')
+      .eq('title', 'Archive')
+      .eq('user_id', task.user_id)
+      .single();
+
+    if (archiveError || !archiveColumn) {
+      console.error('Error finding Archive column:', archiveError);
+      toast({
+        title: "Error",
+        description: "Failed to find Archive column",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Move the trip to the Archive column
+    const { error } = await supabase
+      .from('planner_trips')
+      .update({ column_id: archiveColumn.id })
+      .eq('id', task.id);
+
+    if (error) {
+      console.error('Error archiving trip:', error);
+      toast({
+        title: "Error",
+        description: "Failed to archive trip",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Add to trip history
+    await supabase
+      .from('planner_trip_history')
+      .insert({
+        trip_id: task.id,
+        column_id: archiveColumn.id,
+        previous_column_id: task.column_id,
+        user_id: task.user_id,
+      });
+
+    queryClient.invalidateQueries({ queryKey: ['planner-trips'] });
+    queryClient.invalidateQueries({ queryKey: ['planner-trip-history', task.id] });
+    
+    toast({
+      title: "Success",
+      description: "Trip archived successfully",
+    });
+    
+    onClose();
+  };
+
   return (
     <>
       <Sheet open={open} onOpenChange={onClose}>
@@ -281,7 +337,14 @@ export function TaskDetails({ task, open, onClose, onDelete }: TaskDetailsProps)
               </TabsContent>
             </Tabs>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={handleArchive}
+              >
+                <Archive className="h-4 w-4 mr-2" />
+                Archive Trip
+              </Button>
               <Button
                 variant="destructive"
                 onClick={() => setIsDeleteDialogOpen(true)}

@@ -580,16 +580,15 @@ export function PlannerTripForm({ initialData, onSubmit, onCancel, onDelete }: P
             ))}
           </div>
         )}
-        <div className="flex gap-2 justify-end sticky bottom-0 bg-white pt-4 border-t">
+        <div className="flex gap-2 justify-end sticky bottom-0 bg-gray-50 pt-4 border-t">
           {initialData?.id && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
                   type="button" 
-                  variant="destructive"
+                  variant="ghost"
                   disabled={isDeleting}
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
                   {isDeleting ? "Deleting..." : "Delete Trip"}
                 </Button>
               </AlertDialogTrigger>
