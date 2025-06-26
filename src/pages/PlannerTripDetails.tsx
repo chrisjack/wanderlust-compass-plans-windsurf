@@ -19,6 +19,7 @@ import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { PlannerTripForm } from "@/components/tasks/PlannerTripForm";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
+import React from "react";
 
 export default function PlannerTripDetails() {
   const { id } = useParams();
@@ -123,6 +124,40 @@ export default function PlannerTripDetails() {
     },
     enabled: !!id && !!user,
   });
+
+  // Fetch all custom fields for the user
+  const { data: allCustomFields = [], isLoading: allCustomFieldsLoading } = useQuery({
+    queryKey: ["planner-fields", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('planner_fields')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // Create a map of field values for easy lookup
+  const fieldValuesMap = React.useMemo(() => {
+    const map: { [fieldId: string]: any } = {};
+    customFieldsWithValues.forEach(({ field, value }) => {
+      map[field.id] = value;
+    });
+    return map;
+  }, [customFieldsWithValues]);
+
+  // Combine all custom fields with their values (or empty values)
+  const allCustomFieldsWithValues = React.useMemo(() => {
+    return allCustomFields.map(field => ({
+      field,
+      value: fieldValuesMap[field.id] || null,
+      id: fieldValuesMap[field.id] ? `${field.id}_${fieldValuesMap[field.id]}` : field.id
+    }));
+  }, [allCustomFields, fieldValuesMap]);
 
   useEffect(() => {
     async function fetchTrip() {
@@ -531,21 +566,21 @@ export default function PlannerTripDetails() {
                       </ul>
                     </div>
                     {/* Custom Fields under Links */}
-                    {customFieldsLoading ? (
+                    {(customFieldsLoading || allCustomFieldsLoading) ? (
                       <div className="text-xs text-gray-400 mt-2">Loading fields...</div>
-                    ) : customFieldsWithValues.length > 0 && (
+                    ) : allCustomFieldsWithValues.length > 0 && (
                       <div className="mt-4">
                         <span className="font-medium">Other Fields:</span>
                         <ul className="ml-6 mt-1 space-y-1">
-                          {customFieldsWithValues.map(({ field, value, id }) => (
+                          {allCustomFieldsWithValues.map(({ field, value, id }) => (
                             <li key={id} className="flex gap-2 items-center">
                               <span className="font-semibold text-xs">{field.title}:</span>
                               <span className="text-xs">
                                 {field.type === 'checkbox'
-                                  ? (value === 'true' ? 'Yes' : 'No')
+                                  ? (value === 'true' ? 'Yes' : (value === 'false' ? 'No' : <span className="text-gray-400">Not set</span>))
                                   : field.type === 'date' && value
                                     ? new Date(value).toLocaleDateString()
-                                    : value || <span className="text-gray-400">-</span>}
+                                    : value || <span className="text-gray-400">Not set</span>}
                               </span>
                             </li>
                           ))}
@@ -570,9 +605,7 @@ export default function PlannerTripDetails() {
                           links: trip.links || [],
                           notes: trip.texts?.map((t: any) => ({ title: '', content: t.content })) || [],
                           trip_id: trip.trips?.id || trip.trip_id || "",
-                          customFieldValues: Object.fromEntries(
-                            (customFieldsWithValues || []).map(({ field, value }) => [field.id, value])
-                          ),
+                          customFieldValues: fieldValuesMap,
                         }}
                         onCancel={() => setIsEditOpen(false)}
                         onSubmit={async (data) => {
@@ -648,6 +681,7 @@ export default function PlannerTripDetails() {
                             setLoading(false);
                             // Invalidate custom field values query to refresh the UI
                             queryClient.invalidateQueries({ queryKey: ["planner-trip-custom-fields", trip.id] });
+                            queryClient.invalidateQueries({ queryKey: ["planner-fields", user?.id] });
                             toast({
                               title: "Success",
                               description: "Trip updated successfully",
