@@ -1,4 +1,4 @@
-import { BellDot, MessageCircle, LogOut, User } from "lucide-react";
+import { BellDot, MessageCircle, LogOut, User, Shield } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAuth } from "@/lib/auth";
@@ -11,6 +11,8 @@ import {
 import { useNavigate, Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
+import { useIdleTimeout } from "@/hooks/useIdleTimeout";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function TopNav() {
   const { user, signOut } = useAuth();
@@ -22,6 +24,13 @@ export function TopNav() {
                       user?.email?.split('@')[0] || 
                       'User';
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
+
+  // Get session status for authenticated users
+  const { isWarning } = useIdleTimeout({
+    timeoutDays: 14,
+    warningMinutes: 5,
+    onLogout: signOut
+  });
 
   const handleComingSoon = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,6 +46,23 @@ export function TopNav() {
         <Button variant="ghost" size="icon" asChild={false} onClick={handleComingSoon}>
           <MessageCircle className="h-5 w-5" />
         </Button>
+        
+        {/* Session Status Indicator */}
+        {user && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center">
+                  <div className={`w-2 h-2 rounded-full ${isWarning ? 'bg-yellow-500' : 'bg-green-500'}`} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isWarning ? 'Session expiring soon' : 'Session active'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">

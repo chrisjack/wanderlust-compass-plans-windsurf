@@ -14,8 +14,10 @@ export function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,6 +33,11 @@ export function AuthForm() {
         if (error) throw error;
         navigate("/dashboard");
       } else if (mode === "register") {
+        // Validate password confirmation
+        if (password !== confirmPassword) {
+          throw new Error("Passwords do not match");
+        }
+        
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -47,6 +54,10 @@ export function AuthForm() {
         });
         // Switch to login mode after successful registration
         setMode("login");
+        // Clear form data
+        setPassword("");
+        setConfirmPassword("");
+        setFullName("");
       } else if (mode === "forgotPassword") {
         const { error } = await supabase.auth.resetPasswordForEmail(email);
         if (error) throw error;
@@ -138,9 +149,45 @@ export function AuthForm() {
               </div>
             </div>
           )}
+
+          {mode === "register" && (
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className={password !== confirmPassword && confirmPassword ? "border-red-500" : ""}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+              </div>
+              {password !== confirmPassword && confirmPassword && (
+                <p className="text-sm text-red-500">Passwords do not match</p>
+              )}
+            </div>
+          )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={loading || (mode === "register" && password !== confirmPassword)}
+        >
           {loading
             ? "Loading..."
             : mode === "login"
