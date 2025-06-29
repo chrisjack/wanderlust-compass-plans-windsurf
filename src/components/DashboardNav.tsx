@@ -19,6 +19,7 @@ import {
   ListTodo,
   CalendarIcon
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const navItems = [
   {
@@ -64,7 +65,24 @@ const bottomNavItems = [
 export function DashboardNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const { toast } = useToast();
+
+  // List of routes to block
+  const blockedRoutes = ["/trips", "/clients", "/import", "/library", "/alerts", "/messages"];
+
+  const handleNavClick = (href: string, e: React.MouseEvent) => {
+    if (blockedRoutes.includes(href)) {
+      e.preventDefault();
+      setComingSoonOpen(true);
+      setIsOpen(false);
+    }
+  };
+
+  const handleCreateTripClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setComingSoonOpen(true);
+  };
 
   const handleCreateTrip = async (data: any) => {
     try {
@@ -119,7 +137,7 @@ export function DashboardNav() {
             />
             <Button 
               className="w-full mt-6 bg-primary hover:bg-primary/90"
-              onClick={() => setIsCreateOpen(true)}
+              onClick={handleCreateTripClick}
             >
               New trip
               <span className="ml-2">+</span>
@@ -139,7 +157,7 @@ export function DashboardNav() {
                       ? "bg-primary/10 text-primary font-medium"
                       : "text-gray-700 hover:bg-gray-100"
                   )}
-                  onClick={() => setIsOpen(false)}
+                  onClick={e => handleNavClick(item.href, e)}
                 >
                   <item.icon className="w-5 h-5 mr-3" />
                   {item.title}
@@ -180,7 +198,20 @@ export function DashboardNav() {
         />
       )}
 
-      {/* Create Trip Sheet */}
+      {/* Coming Soon Dialog */}
+      <Dialog open={comingSoonOpen} onOpenChange={setComingSoonOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Coming Soon</DialogTitle>
+            <DialogDescription>
+              This section is currently being worked on and will be available soon.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Trip Sheet (disabled) */}
+      {/*
       <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <SheetContent side="right" className="sm:max-w-xl">
           <SheetHeader>
@@ -194,6 +225,7 @@ export function DashboardNav() {
           </div>
         </SheetContent>
       </Sheet>
+      */}
     </>
   );
 }

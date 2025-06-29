@@ -536,27 +536,6 @@ export default function PlannerTripDetails() {
                         </Badge>
                       </div>
                     )}
-                    <div>
-                      <span className="font-medium">Tags:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {trip.tags?.length > 0 ? trip.tags.map(tag => (
-                          <Badge
-                            key={tag.id}
-                            className="bg-gray-200 text-gray-700"
-                          >
-                            {tag.name}
-                          </Badge>
-                        )) : <span>-</span>}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-medium">Links:</span>
-                      <ul className="list-disc ml-6">
-                        {trip.links?.map(link => (
-                          <li key={link.id}><a href={link.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{link.title}</a></li>
-                        )) || <li>-</li>}
-                      </ul>
-                    </div>
                     {/* Custom Fields - each field as its own section */}
                     {(customFieldsLoading || allCustomFieldsLoading) ? (
                       <div className="text-xs text-gray-400 mt-2">Loading fields...</div>
@@ -578,6 +557,27 @@ export default function PlannerTripDetails() {
                         ))}
                       </>
                     )}
+                    <div>
+                      <span className="font-medium">Tags:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {trip.tags?.length > 0 ? trip.tags.map(tag => (
+                          <Badge
+                            key={tag.id}
+                            className="bg-gray-200 text-gray-700"
+                          >
+                            {tag.name}
+                          </Badge>
+                        )) : <span>-</span>}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="font-medium">Links:</span>
+                      <ul className="list-disc ml-6">
+                        {trip.links?.map(link => (
+                          <li key={link.id}><a href={link.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{link.title}</a></li>
+                        )) || <li>-</li>}
+                      </ul>
+                    </div>
                   </div>
                 </div>
                 <div className="mt-8 text-xs text-gray-500">

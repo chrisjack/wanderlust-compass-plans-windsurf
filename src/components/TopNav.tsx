@@ -9,6 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate, Link } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useState } from "react";
 
 export function TopNav() {
   const { user, signOut } = useAuth();
@@ -19,22 +21,22 @@ export function TopNav() {
   const displayName = user?.user_metadata?.full_name || 
                       user?.email?.split('@')[0] || 
                       'User';
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
+
+  const handleComingSoon = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setComingSoonOpen(true);
+  };
 
   return (
     <div className="bg-background">
       <div className="flex h-16 items-center px-4 gap-4 justify-end">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/alerts">
-            <BellDot className="h-5 w-5" />
-          </Link>
+        <Button variant="ghost" size="icon" asChild={false} onClick={handleComingSoon}>
+          <BellDot className="h-5 w-5" />
         </Button>
-        
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/messages">
-            <MessageCircle className="h-5 w-5" />
-          </Link>
+        <Button variant="ghost" size="icon" asChild={false} onClick={handleComingSoon}>
+          <MessageCircle className="h-5 w-5" />
         </Button>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">
@@ -57,6 +59,16 @@ export function TopNav() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <Dialog open={comingSoonOpen} onOpenChange={setComingSoonOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Coming Soon</DialogTitle>
+            <DialogDescription>
+              This section is currently being worked on and will be available soon.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
