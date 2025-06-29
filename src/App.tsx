@@ -22,6 +22,8 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import ProtectedRoute from "./components/ProtectedRoute";
 import { IdleTimeoutProvider } from "./components/IdleTimeoutProvider";
+import { syncService } from "./lib/syncService";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +35,11 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  useEffect(() => {
+    // Initialize the sync service for offline functionality
+    syncService.init().catch(console.error);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

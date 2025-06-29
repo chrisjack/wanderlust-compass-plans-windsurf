@@ -5,7 +5,7 @@ import { TaskColumn } from "./TaskColumn";
 import { PlannerTripForm } from "./PlannerTripForm";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Settings2, Plus, Upload, GripVertical } from "lucide-react";
+import { Settings2, Plus, Upload, GripVertical, Download } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { ColumnManagementDrawer } from "./ColumnManagementDrawer";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { PlannerFieldsDrawer } from "./PlannerFieldsDrawer";
 import { useArchiveSetup } from "@/hooks/useArchiveSetup";
+import { exportPlannerDataToCSV, downloadCSV } from "@/lib/csvExport";
+import { OfflineStatusIndicator } from "@/components/OfflineStatusIndicator";
 
 interface SortableColumnProps {
   column: any;
@@ -72,6 +74,7 @@ export function TaskBoard() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isFieldsOpen, setIsFieldsOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -91,6 +94,40 @@ export function TaskBoard() {
       },
     })
   );
+
+  // Export handler
+  const handleExport = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to export data",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const csvContent = await exportPlannerDataToCSV(user.id);
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `planner-export-${timestamp}.csv`;
+      downloadCSV(csvContent, filename);
+      
+      toast({
+        title: "Export Successful",
+        description: `Planner data exported to ${filename}`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "Failed to export planner data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const { data: columns = [] } = useQuery({
     queryKey: ['planner-columns'],
@@ -285,6 +322,7 @@ export function TaskBoard() {
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
+          <OfflineStatusIndicator />
         </div>
         <div className="flex gap-2">
           <Button
@@ -307,6 +345,14 @@ export function TaskBoard() {
           >
             <Upload className="h-4 w-4 mr-2" />
             Import CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {isExporting ? "Exporting..." : "Export CSV"}
           </Button>
           <Button
             onClick={() => setIsTaskFormOpen(true)}
@@ -449,6 +495,8 @@ export function TaskBoard() {
       </Sheet>
 
       <PlannerFieldsDrawer open={isFieldsOpen} onClose={() => setIsFieldsOpen(false)} />
+
+      <OfflineStatusIndicator />
     </div>
   );
 }
