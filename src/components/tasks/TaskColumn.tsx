@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { PlannerColumn, PlannerTrip } from "@/integrations/supabase/types";
 import { useDroppable } from '@dnd-kit/core';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { offlineStorage } from "@/lib/offlineStorage";
+import { syncService } from "@/lib/syncService";
 
 interface TaskColumnProps {
   column: PlannerColumn;
@@ -19,11 +21,38 @@ export function TaskColumn({ column, onAddTask, search, onCount }: TaskColumnPro
   const { user } = useAuth();
   const { setNodeRef } = useDroppable({ id: column.id });
   const [isExpanded, setIsExpanded] = useState(false);
+  const [offlineTasks, setOfflineTasks] = useState<PlannerTrip[]>([]);
 
   // Check if this is the Archive column
   const isArchiveColumn = column.title === 'Archive';
 
-  const { data: tasks = [] } = useQuery({
+  // Fetch offline tasks
+  useEffect(() => {
+    const loadOfflineTasks = async () => {
+      if (!user) return;
+      
+      try {
+        const offlineTrips = await offlineStorage.getTrips(user.id);
+        const columnTrips = offlineTrips.filter(trip => trip.column_id === column.id);
+        setOfflineTasks(columnTrips as PlannerTrip[]);
+      } catch (error) {
+        console.error('Error loading offline tasks:', error);
+      }
+    };
+
+    loadOfflineTasks();
+    
+    // Set up change listener for offline storage updates
+    const unsubscribe = offlineStorage.onChange((table) => {
+      if (table === 'trips') {
+        loadOfflineTasks();
+      }
+    });
+    
+    return unsubscribe;
+  }, [user, column.id]);
+
+  const { data: onlineTasks = [] } = useQuery({
     queryKey: ['planner-trips', column.id],
     queryFn: async () => {
       if (!user) return [];
@@ -88,8 +117,33 @@ export function TaskColumn({ column, onAddTask, search, onCount }: TaskColumnPro
     enabled: !!user,
   });
 
+  // Combine online and offline tasks, prioritizing offline for duplicates
+  const allTasks = React.useMemo(() => {
+    const onlineTaskIds = new Set(onlineTasks.map(task => task.id));
+    const offlineOnlyTasks = offlineTasks.filter(task => !onlineTaskIds.has(task.id));
+    
+    // Combine and sort
+    const combined = [...onlineTasks, ...offlineOnlyTasks];
+    
+    return combined.sort((a, b) => {
+      // If both have departure dates, sort by date
+      if (a.departureDate && b.departureDate) {
+        return new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime();
+      }
+      // If only one has departure date, prioritize the one with date
+      if (a.departureDate && !b.departureDate) {
+        return -1;
+      }
+      if (!a.departureDate && b.departureDate) {
+        return 1;
+      }
+      // If neither has departure date, maintain original order
+      return 0;
+    });
+  }, [onlineTasks, offlineTasks]);
+
   // Filter tasks by search (title or tags)
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = allTasks.filter(task => {
     if (!search) return true;
     const lower = search.toLowerCase();
     const inTitle = task.title?.toLowerCase().includes(lower);
@@ -104,12 +158,10 @@ export function TaskColumn({ column, onAddTask, search, onCount }: TaskColumnPro
   }, [filteredTasks.length, onCount]);
 
   const handleDelete = async (taskId: string) => {
-    const { error } = await supabase
-      .from('planner_trips')
-      .delete()
-      .eq('id', taskId);
-
-    if (error) {
+    try {
+      // Use sync service for deletion
+      await syncService.deleteTripOptimistic(taskId);
+    } catch (error) {
       console.error('Error deleting trip:', error);
       throw error;
     }

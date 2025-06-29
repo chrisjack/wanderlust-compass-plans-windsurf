@@ -63,6 +63,7 @@ interface PlannerOfflineDB extends DBSchema {
   syncMetadata: {
     key: string;
     value: {
+      id: string;
       lastSyncTimestamp: number;
       isOnline: boolean;
       pendingOperationsCount: number;
@@ -74,6 +75,7 @@ class OfflineStorage {
   private db: IDBPDatabase<PlannerOfflineDB> | null = null;
   private dbName = 'planner-offline-db';
   private version = 1;
+  private changeListeners: ((table: string) => void)[] = [];
 
   async init(): Promise<void> {
     try {
@@ -108,6 +110,22 @@ class OfflineStorage {
     }
   }
 
+  // Add change listener
+  onChange(listener: (table: string) => void) {
+    this.changeListeners.push(listener);
+    return () => {
+      const index = this.changeListeners.indexOf(listener);
+      if (index > -1) {
+        this.changeListeners.splice(index, 1);
+      }
+    };
+  }
+
+  // Notify listeners of changes
+  private notifyChange(table: string) {
+    this.changeListeners.forEach(listener => listener(table));
+  }
+
   async isOnline(): Promise<boolean> {
     if (!this.db) await this.init();
     const metadata = await this.db!.get('syncMetadata', 'status');
@@ -133,6 +151,7 @@ class OfflineStorage {
       offlineId: isOffline ? `offline_${Date.now()}_${Math.random()}` : undefined,
     };
     await this.db!.put('trips', tripData);
+    this.notifyChange('trips');
   }
 
   async getTrips(userId: string): Promise<any[]> {
@@ -148,6 +167,7 @@ class OfflineStorage {
   async deleteTrip(id: string): Promise<void> {
     if (!this.db) await this.init();
     await this.db!.delete('trips', id);
+    this.notifyChange('trips');
   }
 
   // Note operations
@@ -159,6 +179,7 @@ class OfflineStorage {
       offlineId: isOffline ? `offline_${Date.now()}_${Math.random()}` : undefined,
     };
     await this.db!.put('notes', noteData);
+    this.notifyChange('notes');
   }
 
   async getNotes(tripId: string): Promise<any[]> {
@@ -169,6 +190,7 @@ class OfflineStorage {
   async deleteNote(id: string): Promise<void> {
     if (!this.db) await this.init();
     await this.db!.delete('notes', id);
+    this.notifyChange('notes');
   }
 
   // Column operations
@@ -180,6 +202,7 @@ class OfflineStorage {
       offlineId: isOffline ? `offline_${Date.now()}_${Math.random()}` : undefined,
     };
     await this.db!.put('columns', columnData);
+    this.notifyChange('columns');
   }
 
   async getColumns(userId: string): Promise<any[]> {
@@ -201,6 +224,7 @@ class OfflineStorage {
       retryCount: 0,
     };
     await this.db!.add('pendingOperations', pendingOp);
+    this.notifyChange('pendingOperations');
   }
 
   async getPendingOperations(): Promise<any[]> {
@@ -211,6 +235,7 @@ class OfflineStorage {
   async removePendingOperation(id: string): Promise<void> {
     if (!this.db) await this.init();
     await this.db!.delete('pendingOperations', id);
+    this.notifyChange('pendingOperations');
   }
 
   async getPendingOperationsCount(): Promise<number> {

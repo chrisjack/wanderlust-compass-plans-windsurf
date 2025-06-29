@@ -1,6 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
 import { offlineStorage } from './offlineStorage';
-import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SyncStatus {
   isOnline: boolean;
@@ -10,118 +9,82 @@ export interface SyncStatus {
 }
 
 class SyncService {
+  private onlineStatus = navigator.onLine;
   private syncInProgress = false;
-  private syncInterval: NodeJS.Timeout | null = null;
-  private statusListeners: ((status: SyncStatus) => void)[] = [];
+  private changeListeners: ((status: 'online' | 'offline' | 'syncing') => void)[] = [];
 
   constructor() {
-    this.setupOnlineOfflineListeners();
+    this.setupNetworkListeners();
+    this.initializeOnlineStatus();
   }
 
-  private setupOnlineOfflineListeners() {
-    window.addEventListener('online', () => this.handleOnline());
-    window.addEventListener('offline', () => this.handleOffline());
-  }
-
-  private async handleOnline() {
-    console.log('Connection restored - starting sync');
-    await offlineStorage.setOnlineStatus(true);
-    this.notifyStatusListeners();
-    await this.syncPendingOperations();
-  }
-
-  private async handleOffline() {
-    console.log('Connection lost - switching to offline mode');
-    await offlineStorage.setOnlineStatus(false);
-    this.notifyStatusListeners();
-  }
-
-  async getSyncStatus(): Promise<SyncStatus> {
-    const isOnline = await offlineStorage.isOnline();
-    const pendingOperations = await offlineStorage.getPendingOperationsCount();
-    const lastSyncTime = await offlineStorage.getLastSyncTimestamp();
-
-    return {
-      isOnline,
-      isSyncing: this.syncInProgress,
-      pendingOperations,
-      lastSyncTime,
-    };
-  }
-
-  onStatusChange(listener: (status: SyncStatus) => void) {
-    this.statusListeners.push(listener);
+  // Add status change listener
+  onStatusChange(listener: (status: 'online' | 'offline' | 'syncing') => void) {
+    this.changeListeners.push(listener);
     return () => {
-      const index = this.statusListeners.indexOf(listener);
+      const index = this.changeListeners.indexOf(listener);
       if (index > -1) {
-        this.statusListeners.splice(index, 1);
+        this.changeListeners.splice(index, 1);
       }
     };
   }
 
-  private async notifyStatusListeners() {
-    const status = await this.getSyncStatus();
-    this.statusListeners.forEach(listener => listener(status));
+  // Notify listeners of status changes
+  private notifyStatusChange(status: 'online' | 'offline' | 'syncing') {
+    this.changeListeners.forEach(listener => listener(status));
+  }
+
+  private setupNetworkListeners() {
+    window.addEventListener('online', () => {
+      this.onlineStatus = true;
+      this.notifyStatusChange('online');
+      this.syncPendingOperations();
+    });
+
+    window.addEventListener('offline', () => {
+      this.onlineStatus = false;
+      this.notifyStatusChange('offline');
+    });
+  }
+
+  private async initializeOnlineStatus() {
+    await offlineStorage.setOnlineStatus(this.onlineStatus);
+  }
+
+  async isOnline(): Promise<boolean> {
+    return await offlineStorage.isOnline();
   }
 
   async syncPendingOperations(): Promise<void> {
-    if (this.syncInProgress) {
-      console.log('Sync already in progress, skipping');
-      return;
-    }
-
-    const isOnline = await offlineStorage.isOnline();
-    if (!isOnline) {
-      console.log('Offline - skipping sync');
-      return;
-    }
+    if (this.syncInProgress || !this.onlineStatus) return;
 
     this.syncInProgress = true;
-    await this.notifyStatusListeners();
+    this.notifyStatusChange('syncing');
 
     try {
       const pendingOps = await offlineStorage.getPendingOperations();
-      console.log(`Syncing ${pendingOps.length} pending operations`);
-
+      
       for (const op of pendingOps) {
         try {
           await this.processPendingOperation(op);
           await offlineStorage.removePendingOperation(op.id);
         } catch (error) {
-          console.error(`Failed to process operation ${op.id}:`, error);
+          console.error(`Failed to process pending operation ${op.id}:`, error);
           op.retryCount++;
           
           // Remove operation if it has been retried too many times
           if (op.retryCount >= 3) {
             await offlineStorage.removePendingOperation(op.id);
-            toast({
-              title: "Sync Error",
-              description: `Failed to sync ${op.type} operation after 3 attempts`,
-              variant: "destructive",
-            });
           }
         }
       }
 
       await offlineStorage.updateLastSyncTimestamp();
-      await this.notifyStatusListeners();
-
-      if (pendingOps.length > 0) {
-        toast({
-          title: "Sync Complete",
-          description: `Successfully synced ${pendingOps.length} operations`,
-        });
-      }
     } catch (error) {
-      console.error('Sync failed:', error);
-      toast({
-        title: "Sync Failed",
-        description: "Failed to sync with server",
-        variant: "destructive",
-      });
+      console.error('Error during sync:', error);
     } finally {
       this.syncInProgress = false;
-      await this.notifyStatusListeners();
+      this.notifyStatusChange(this.onlineStatus ? 'online' : 'offline');
     }
   }
 
@@ -130,31 +93,29 @@ class SyncService {
 
     switch (table) {
       case 'trips':
-        await this.syncTripOperation(type, data);
+        await this.processTripOperation(type, data);
         break;
       case 'notes':
-        await this.syncNoteOperation(type, data);
+        await this.processNoteOperation(type, data);
         break;
       case 'columns':
-        await this.syncColumnOperation(type, data);
+        await this.processColumnOperation(type, data);
         break;
-      default:
-        throw new Error(`Unknown table: ${table}`);
     }
   }
 
-  private async syncTripOperation(type: string, data: any): Promise<void> {
+  private async processTripOperation(type: string, data: any): Promise<void> {
     switch (type) {
       case 'CREATE':
-        const { data: newTrip, error } = await supabase
+        const { data: newTrip, error: createError } = await supabase
           .from('planner_trips')
           .insert(data)
           .select()
           .single();
         
-        if (error) throw error;
+        if (createError) throw createError;
         
-        // Update local storage with the real ID
+        // Update offline storage with the real ID
         await offlineStorage.saveTrip(newTrip, false);
         break;
 
@@ -178,22 +139,22 @@ class SyncService {
     }
   }
 
-  private async syncNoteOperation(type: string, data: any): Promise<void> {
+  private async processNoteOperation(type: string, data: any): Promise<void> {
     switch (type) {
       case 'CREATE':
-        const { data: newNote, error } = await supabase
-          .from('planner_notes')
+        const { data: newNote, error: createError } = await supabase
+          .from('planner_trip_texts')
           .insert(data)
           .select()
           .single();
         
-        if (error) throw error;
+        if (createError) throw createError;
         await offlineStorage.saveNote(newNote, false);
         break;
 
       case 'UPDATE':
         const { error: updateError } = await supabase
-          .from('planner_notes')
+          .from('planner_trip_texts')
           .update(data)
           .eq('id', data.id);
         
@@ -202,7 +163,7 @@ class SyncService {
 
       case 'DELETE':
         const { error: deleteError } = await supabase
-          .from('planner_notes')
+          .from('planner_trip_texts')
           .delete()
           .eq('id', data.id);
         
@@ -211,16 +172,16 @@ class SyncService {
     }
   }
 
-  private async syncColumnOperation(type: string, data: any): Promise<void> {
+  private async processColumnOperation(type: string, data: any): Promise<void> {
     switch (type) {
       case 'CREATE':
-        const { data: newColumn, error } = await supabase
+        const { data: newColumn, error: createError } = await supabase
           .from('planner_columns')
           .insert(data)
           .select()
           .single();
         
-        if (error) throw error;
+        if (createError) throw createError;
         await offlineStorage.saveColumn(newColumn, false);
         break;
 
@@ -244,7 +205,7 @@ class SyncService {
     }
   }
 
-  // Optimistic operations for immediate UI feedback
+  // Optimistic trip operations
   async createTripOptimistic(tripData: any): Promise<string> {
     const offlineId = `offline_${Date.now()}_${Math.random()}`;
     const trip = {
@@ -254,7 +215,7 @@ class SyncService {
       updated_at: new Date().toISOString(),
     };
 
-    // Save to local storage immediately
+    // Save to offline storage immediately
     await offlineStorage.saveTrip(trip, true);
 
     // Add to pending operations
@@ -264,89 +225,117 @@ class SyncService {
       data: tripData,
     });
 
-    await this.notifyStatusListeners();
-
     // Try to sync immediately if online
-    const isOnline = await offlineStorage.isOnline();
-    if (isOnline) {
+    if (this.onlineStatus) {
       this.syncPendingOperations();
     }
 
     return offlineId;
   }
 
-  async updateTripOptimistic(id: string, updates: any): Promise<void> {
-    // Update local storage immediately
-    const existingTrip = await offlineStorage.getTrip(id);
+  async updateTripOptimistic(tripId: string, updates: any): Promise<void> {
+    // Update offline storage immediately
+    const existingTrip = await offlineStorage.getTrip(tripId);
     if (existingTrip) {
       const updatedTrip = {
         ...existingTrip,
         ...updates,
         updated_at: new Date().toISOString(),
       };
-      await offlineStorage.saveTrip(updatedTrip, true);
+      await offlineStorage.saveTrip(updatedTrip, existingTrip.isOffline);
     }
 
     // Add to pending operations
     await offlineStorage.addPendingOperation({
       type: 'UPDATE',
       table: 'trips',
-      data: { id, ...updates },
+      data: { id: tripId, ...updates },
     });
 
-    await this.notifyStatusListeners();
-
     // Try to sync immediately if online
-    const isOnline = await offlineStorage.isOnline();
-    if (isOnline) {
+    if (this.onlineStatus) {
       this.syncPendingOperations();
     }
   }
 
-  async deleteTripOptimistic(id: string): Promise<void> {
-    // Remove from local storage immediately
-    await offlineStorage.deleteTrip(id);
+  async deleteTripOptimistic(tripId: string): Promise<void> {
+    // Remove from offline storage immediately
+    await offlineStorage.deleteTrip(tripId);
 
     // Add to pending operations
     await offlineStorage.addPendingOperation({
       type: 'DELETE',
       table: 'trips',
-      data: { id },
+      data: { id: tripId },
     });
 
-    await this.notifyStatusListeners();
-
     // Try to sync immediately if online
-    const isOnline = await offlineStorage.isOnline();
-    if (isOnline) {
+    if (this.onlineStatus) {
       this.syncPendingOperations();
     }
   }
 
-  // Start periodic sync
-  startPeriodicSync(intervalMs: number = 30000): void {
-    if (this.syncInterval) {
-      clearInterval(this.syncInterval);
-    }
+  // Optimistic note operations
+  async createNoteOptimistic(noteData: any): Promise<string> {
+    const offlineId = `offline_${Date.now()}_${Math.random()}`;
+    const note = {
+      ...noteData,
+      id: offlineId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-    this.syncInterval = setInterval(() => {
+    await offlineStorage.saveNote(note, true);
+
+    await offlineStorage.addPendingOperation({
+      type: 'CREATE',
+      table: 'notes',
+      data: noteData,
+    });
+
+    if (this.onlineStatus) {
       this.syncPendingOperations();
-    }, intervalMs);
+    }
+
+    return offlineId;
   }
 
-  // Stop periodic sync
-  stopPeriodicSync(): void {
-    if (this.syncInterval) {
-      clearInterval(this.syncInterval);
-      this.syncInterval = null;
+  async updateNoteOptimistic(noteId: string, updates: any): Promise<void> {
+    const existingNotes = await offlineStorage.getNotes(updates.trip_id || '');
+    const existingNote = existingNotes.find(n => n.id === noteId);
+    
+    if (existingNote) {
+      const updatedNote = {
+        ...existingNote,
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
+      await offlineStorage.saveNote(updatedNote, existingNote.isOffline);
+    }
+
+    await offlineStorage.addPendingOperation({
+      type: 'UPDATE',
+      table: 'notes',
+      data: { id: noteId, ...updates },
+    });
+
+    if (this.onlineStatus) {
+      this.syncPendingOperations();
     }
   }
 
-  // Initialize the service
-  async init(): Promise<void> {
-    await offlineStorage.init();
-    await this.notifyStatusListeners();
-    this.startPeriodicSync();
+  async deleteNoteOptimistic(noteId: string): Promise<void> {
+    await offlineStorage.deleteNote(noteId);
+
+    await offlineStorage.addPendingOperation({
+      type: 'DELETE',
+      table: 'notes',
+      data: { id: noteId },
+    });
+
+    if (this.onlineStatus) {
+      this.syncPendingOperations();
+    }
   }
 }
 
