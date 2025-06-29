@@ -1,1 +1,0 @@
-Sample travel confirmation for testing upload endpoint.

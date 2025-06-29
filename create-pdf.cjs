@@ -1,4 +1,4 @@
-const pdf = require('html-pdf');
+const puppeteer = require('puppeteer');
 
 const content = `
 <!DOCTYPE html>
@@ -54,8 +54,9 @@ const content = `
 `;
 
 const options = {
+  path: 'sample_flight.pdf',
   format: 'Letter',
-  border: {
+  margin: {
     top: '0.5in',
     right: '0.5in',
     bottom: '0.5in',
@@ -63,10 +64,17 @@ const options = {
   }
 };
 
-pdf.create(content, options).toFile('sample_flight.pdf', function(err, res) {
-  if (err) {
+async function createPdf() {
+  try {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(content);
+    await page.pdf(options);
+    await browser.close();
+    console.log('PDF created successfully:', options.path);
+  } catch (err) {
     console.error('Error creating PDF:', err);
-    return;
   }
-  console.log('PDF created successfully:', res.filename);
-}); 
+}
+
+createPdf(); 
