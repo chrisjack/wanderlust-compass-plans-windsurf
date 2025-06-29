@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import DOMPurify from "dompurify";
 
 interface SearchResult {
   id: number;
@@ -96,7 +96,7 @@ export function WikiVoyageSearch() {
                 </a>
               </h4>
               <p className="mt-1 text-sm text-gray-600" 
-                 dangerouslySetInnerHTML={{ __html: result.snippet }} 
+                 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result.snippet) }} 
               />
             </Card>
           ))}
