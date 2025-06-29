@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          'pdf-worker': ['pdfjs-dist/build/pdf.worker.min.js']
+          'pdf-worker': ['pdfjs-dist/build/pdf.worker.min.mjs']
         }
       }
     }
