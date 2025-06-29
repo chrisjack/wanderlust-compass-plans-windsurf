@@ -3,8 +3,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { OpenAI } from 'https://esm.sh/openai@4.0.0'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://wanderlust-compass-plans-windsurf.vercel.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 }
 
 serve(async (req) => {
@@ -78,7 +80,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error processing email:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Failed to process email' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

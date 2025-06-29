@@ -1,10 +1,11 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://wanderlust-compass-plans-windsurf.vercel.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 serve(async (req) => {
@@ -15,9 +16,34 @@ serve(async (req) => {
   try {
     const { document } = await req.json();
     
+    // Input validation
     if (!document) {
       return new Response(
         JSON.stringify({ error: "No document data provided" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate document structure
+    if (!document.content || typeof document.content !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Invalid document content" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Content length validation (50KB limit)
+    if (document.content.length > 50000) {
+      return new Response(
+        JSON.stringify({ error: "Document content too large (max 50KB)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate fileName if provided
+    if (document.fileName && typeof document.fileName !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Invalid file name" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -124,7 +150,7 @@ ${document.content.substring(0, 12000)}
   } catch (error) {
     console.error("Error processing document:", error);
     return new Response(
-      JSON.stringify({ error: "Document parsing failed", details: error.message }),
+      JSON.stringify({ error: "Document parsing failed" }),
       { 
         status: 500, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 

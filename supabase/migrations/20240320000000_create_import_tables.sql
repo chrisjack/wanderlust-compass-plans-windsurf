@@ -85,14 +85,59 @@ DROP POLICY IF EXISTS "Users can view their own imports" ON import_cruise;
 CREATE POLICY "Users can view their own imports" ON import_flights
   FOR SELECT USING (auth.uid() = user_id);
 
+CREATE POLICY "Users can insert their own imports" ON import_flights
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own imports" ON import_flights
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own imports" ON import_flights
+  FOR DELETE USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can view their own imports" ON import_accommodation
   FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own imports" ON import_accommodation
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own imports" ON import_accommodation
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own imports" ON import_accommodation
+  FOR DELETE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can view their own imports" ON import_events
   FOR SELECT USING (auth.uid() = user_id);
 
+CREATE POLICY "Users can insert their own imports" ON import_events
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own imports" ON import_events
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own imports" ON import_events
+  FOR DELETE USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can view their own imports" ON import_transport
   FOR SELECT USING (auth.uid() = user_id);
 
+CREATE POLICY "Users can insert their own imports" ON import_transport
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own imports" ON import_transport
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own imports" ON import_transport
+  FOR DELETE USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can view their own imports" ON import_cruise
-  FOR SELECT USING (auth.uid() = user_id); 
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own imports" ON import_cruise
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own imports" ON import_cruise
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own imports" ON import_cruise
+  FOR DELETE USING (auth.uid() = user_id); 

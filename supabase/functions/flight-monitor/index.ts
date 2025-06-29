@@ -1,10 +1,11 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://wanderlust-compass-plans-windsurf.vercel.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 }
 
 const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY")
@@ -41,7 +42,7 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Error in flight-monitor:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
@@ -50,6 +51,23 @@ serve(async (req) => {
 
 async function handleSubscription(req: Request, supabase) {
   const { flightId } = await req.json()
+  
+  // Input validation
+  if (!flightId || typeof flightId !== 'string' || flightId.trim().length === 0) {
+    return new Response(JSON.stringify({ error: 'Invalid flight ID provided' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  if (!uuidRegex.test(flightId)) {
+    return new Response(JSON.stringify({ error: 'Invalid flight ID format' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
   
   // Get flight details from database
   const { data: flight, error: flightError } = await supabase
